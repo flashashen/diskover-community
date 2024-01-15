@@ -1,0 +1,19 @@
+#!/command/with-contenv sh
+# shellcheck shell=bash
+
+python3 /opt/diskover/diskover.py -f /data
+
+code=$?
+count=0
+if [ $code -eq 0 ] || [ $code -eq 64 ]; then
+  # This service has served its purpose
+  exec s6-svc -Od .
+else
+  echo "Scan failed with code ${code}"
+  count=$((count+1))
+  if [ $count -gt 3 ] ; then
+      echo 'Giving up'
+      exec s6-svc -Od .
+  fi
+  sleep 10
+fi

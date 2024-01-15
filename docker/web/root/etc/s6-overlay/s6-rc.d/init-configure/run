@@ -1,0 +1,76 @@
+#!/command/with-contenv sh
+# shellcheck shell=bash
+
+#
+# Setup diskover-web
+#
+
+# make sure tasks is writable
+chmod 666 /var/www/public/tasks/tasks.json 2> /dev/null || true
+
+
+# Copy all sample files if corresponding regular file does not yet exist
+if [[ -d /var/www ]]; then
+   cd /var/www
+    for f in $(find . -type f -name *.sample 2> /dev/null);
+    do
+      FNAME="${f%.*}"
+      if [[ ! -e "${f%.*}" ]]; then
+        cp $f $FNAME
+        echo "${f} copied to ${FNAME}"
+      else
+        echo "${FNAME} already exists. Will not overwrite"
+      fi
+      chmod 666 $FNAME || true
+    done || true
+fi
+
+
+if [[ ! -e "/var/www/db/diskoverdb.sqlite3" ]]; then
+    echo 'Touch  /var/www/db/diskoverdb.sqlite3'
+    mkdir /var/www/db || true
+    chmod 777 /var/www/db
+    touch /var/www/db/diskoverdb.sqlite3 || true
+    chmod 666 /var/www/db/diskoverdb.sqlite3
+fi
+
+
+if [[ -e /dist/diskover-web.lic ]]; then
+  echo 'Copying /dist/diskover-web.lic /var/www/src/diskover/diskover-web.lic'
+  cp /dist/diskover-web.lic /var/www/src/diskover/diskover-web.lic
+fi
+
+
+
+
+#
+# Setup nginx
+
+# Install ssl certificate and private key. Take from /dist if present, otherwise generate them
+#
+
+mkdir /etc/nginx/ssl 2> /dev/null || true
+CERT_FILE=$(ls -Art /dist/*.crt 2> /dev/null | grep -v tool | tail -n 1)
+if [[ -s "${CERT_FILE}" ]]; then
+  echo "Copying certificate to /etc/nginx/ssl"
+  cp $CERT_FILE /etc/nginx/ssl/certificate.crt
+
+  KEY_FILE=$(ls -Art /dist/*.key 2> /dev/null | grep -v tool | tail -n 1)
+  if [[ -s "${KEY_FILE}" ]]; then
+    cp $KEY_FILE /etc/nginx/ssl/privatekey.key
+  fi
+fi
+
+if [[ ! -s /etc/nginx/ssl/certificate.crt ]]; then
+  echo "Creating self-signed certificate in /etc/nginx/ssl"
+  openssl req -newkey rsa:4096 \
+              -x509 \
+              -sha256 \
+              -days 3650 \
+              -nodes \
+              -out /etc/nginx/ssl/certificate.crt \
+              -keyout /etc/nginx/ssl/privatekey.key \
+              -subj "/C=US/ST=Nevada/L=Reno/CN=diskover.self-hosted" &>/dev/null
+fi
+
+

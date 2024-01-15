@@ -1,0 +1,78 @@
+
+version: "3"
+
+
+volumes:
+  elastic_data:
+
+
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-7.16.1}
+    deploy:
+      replicas: 1
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OTS=-Xms4g -Xmx4g
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    ports:
+      - ${ELASTICSEARCH_PORT:-9200}:9200
+      - 9300:9300
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.16.1
+    deploy:
+      replicas: 1
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+  diskover-ce-web:
+    image: diskoverdata/diskover-ce-web:${IMAGE_VERSION:-20231222}
+    deploy:
+      replicas: 1
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      TIMEZONE: ${TIMEZONE:-America/New_York}
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:-elasticsearch}
+      ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT:-9200}
+      ELASTICSEARCH_USER: ${ELASTICSEARCH_USER:-''}
+      ELASTICSEARCH_PASS: ${ELASTICSEARCH_PASS:-''}
+      ELASTICSEARCH_HTTPS: ${ELASTICSEARCH_HTTPS:-false}
+      ELASTICSEARCH_SSL_VERIFICATION: ${ELASTICSEARCH_SSL_VERIFICATION:-false}
+      DISKOVER_LOGIN_REQUIRED: ${DISKOVER_LOGIN_REQUIRED:-false}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/login.php"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  diskover-ce:
+    image: diskoverdata/diskover-ce:${IMAGE_VERSION:-20231222}
+    deploy:
+      replicas: 1
+    volumes:
+      - /tmp:/data
+    environment:
+      TIMEZONE: ${TIMEZONE:-America/New_York}
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:-elasticsearch}
+      ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT:-9200}
+      ELASTICSEARCH_USER: ${ELASTICSEARCH_USER:-''}
+      ELASTICSEARCH_PASS: ${ELASTICSEARCH_PASS:-''}
+      ELASTICSEARCH_HTTPS: ${ELASTICSEARCH_HTTPS:-false}
+      ELASTICSEARCH_SSL_VERIFICATION: ${ELASTICSEARCH_SSL_VERIFICATION:-false}
+      DISKOVER_LOGIN_REQUIRED: ${DISKOVER_LOGIN_REQUIRED:-true}

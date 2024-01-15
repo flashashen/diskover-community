@@ -1,0 +1,82 @@
+
+version: '3'
+
+
+x-defaults: &service_defaults
+  env_file:
+    - .env
+  restart: unless-stopped
+  logging:
+    options:
+      max-size: ${LOG_MAX_SIZE:-50m}
+      max-file: ${LOG_MAX_FILES:-3}
+
+
+
+volumes:
+  elastic_data:
+
+services:
+
+  elasticsearch:
+    <<: *service_defaults
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-7.16.1}
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OTS=${ELASTICSEARCH_JAVA_OPTS}
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    volumes:
+      - ${HOST_MOUNT_ELASTICSEARCH_CONFIG:-./mount/elasticsearch/data}:/usr/share/elasticsearch/data
+    ports:
+      - ${ELASTICSEARCH_PORT:-9200}:${ELASTICSEARCH_PORT:-9200}
+      - 9300:9300
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+
+  kibana:
+    <<: *service_defaults
+    image: docker.elastic.co/kibana/kibana:7.16.1
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      #      ELASTICSEARCH_URL: http://elasticsearch:9200
+      #      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+
+  diskover-ce-web:
+    <<: *service_defaults
+    image: diskoverdata/diskover-ce-web:${DISKOVER_IMAGE_VERSION:-20231222}
+    #    volumes:
+    #      - ${HOST_MOUNT_WEB:-./mount/web/www}:/var/www
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - ES_HOST=${ELASTICSEARCH_HOST:-elasticsearch}
+      - ES_PORT=${ELASTICSEARCH_PORT:-9200}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/login.php"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  diskover-ce:
+    <<: *service_defaults
+    image: diskoverdata/diskover-ce:${DISKOVER_IMAGE_VERSION:-20231222}
+    volumes:
+      - ${DISKOVER_SCAN_DIR:-/tmp}:/data
+      - ${HOST_MOUNT_WORKER_CONFIG:-./mount/worker/config}:/root/.config
+    depends_on:
+      - diskover-ce-web
+
