@@ -3,14 +3,16 @@ version: '3'
 
 
 x-defaults: &service_defaults
-  env_file:
-    - .env
   restart: unless-stopped
   logging:
     options:
       max-size: ${LOG_MAX_SIZE:-50m}
       max-file: ${LOG_MAX_FILES:-3}
 
+x-environment: &environment_defaults
+  TIMEZONE: ${TIMEZONE:-America/New_York}
+  S6_VERBOSITY: ${S6_VERBOSITY:-3}
+  S6_TEMPLATE_OVERWRITES: true
 
 
 volumes:
@@ -22,12 +24,12 @@ services:
     <<: *service_defaults
     image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-7.16.1}
     environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - ES_JAVA_OTS=${ELASTICSEARCH_JAVA_OPTS}
-      - cluster.routing.allocation.disk.threshold_enabled=false
+      discovery.type: single-node
+      bootstrap.memory_lock: true
+      ES_JAVA_OTS: ${ELASTICSEARCH_JAVA_OPTS:-=-Xms2g -Xmx2g}
+      cluster.routing.allocation.disk.threshold_enabled: false
     volumes:
-      - ${HOST_MOUNT_ELASTICSEARCH_CONFIG:-./mount/elasticsearch/data}:/usr/share/elasticsearch/data
+      - ${HOST_MOUNT_ELASTICSEARCH:-./mount/elasticsearch/data}:/usr/share/elasticsearch/data
     ports:
       - ${ELASTICSEARCH_PORT:-9200}:${ELASTICSEARCH_PORT:-9200}
       - 9300:9300
@@ -40,30 +42,38 @@ services:
 
   kibana:
     <<: *service_defaults
-    image: docker.elastic.co/kibana/kibana:7.16.1
+    image: docker.elastic.co/kibana/kibana:${ES_VERSION:-7.17.16}
+    profiles:
+      - elasticsearch
     ports:
       - 5601:5601
     depends_on:
       - elasticsearch
     environment:
-      #      ELASTICSEARCH_URL: http://elasticsearch:9200
-      #      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
 
   diskover-ce-web:
     <<: *service_defaults
-    image: diskoverdata/diskover-ce-web:${DISKOVER_IMAGE_VERSION:-20231222}
-    #    volumes:
-    #      - ${HOST_MOUNT_WEB:-./mount/web/www}:/var/www
+    image: diskoverdata/diskover-ce-web${DISKOVER_WEB_IMAGE_SUFFIX:-}:${DISKOVER_IMAGE_VERSION:-2.3.0_build_20240115}
+    volumes:
+#      - ${HOST_MOUNT_DISKOVER_WEB:-./resources}:/var/www
+      - ${HOST_MOUNT_DISKOVER_WEB_DB:-./mount/web/db}:/var/www/db
     ports:
-      - 80:80
-      - 443:443
+      - ${DISKOVER_WEB_PORT:-80}:${DISKOVER_WEB_PORT:-80}
+      - ${DISKOVER_WEB_HTTPS_PORT:-443}:${DISKOVER_WEB_HTTPS_PORT:-443}
     environment:
-      - PUID=1000
-      - PGID=1000
-      - ES_HOST=${ELASTICSEARCH_HOST:-elasticsearch}
-      - ES_PORT=${ELASTICSEARCH_PORT:-9200}
+      <<: *environment_defaults
+      DISKOVER_WEB_PORT: ${DISKOVER_WEB_PORT:-80}
+      DISKOVER_WEB_HTTPS_PORT: ${DISKOVER_WEB_HTTPS_PORT:-443}
+      DISKOVER_ADMIN_PORT: ${DISKOVER_ADMIN_PORT:-8080}
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:-elasticsearch}
+      ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT:-9200}
+      ELASTICSEARCH_USER: ${ELASTICSEARCH_USER:-}
+      ELASTICSEARCH_PASS: ${ELASTICSEARCH_PASS:-}
+      ELASTICSEARCH_HTTPS: ${ELASTICSEARCH_HTTPS:-false}
+      ELASTICSEARCH_SSL_VERIFICATION: ${ELASTICSEARCH_SSL_VERIFICATION:-false}
+      DISKOVER_LOGIN_REQUIRED: ${DISKOVER_LOGIN_REQUIRED:-false}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/login.php"]
       interval: 5s
@@ -73,10 +83,24 @@ services:
 
   diskover-ce:
     <<: *service_defaults
-    image: diskoverdata/diskover-ce:${DISKOVER_IMAGE_VERSION:-20231222}
+    image: diskoverdata/diskover-ce:${DISKOVER_IMAGE_VERSION:-2.3.0_build_20240115}
     volumes:
-      - ${DISKOVER_SCAN_DIR:-/tmp}:/data
-      - ${HOST_MOUNT_WORKER_CONFIG:-./mount/worker/config}:/root/.config
+      - ${DISKOVER_SCAN_DIR:-/bin}:/data
+#      - ${HOST_MOUNT_DISKOVER_APP:-./mount/worker/app}:/opt/diskover
+#      - ${HOST_MOUNT_DISKOVER_CONFIG:-./mount/worker/config}:/root/.config
+    environment:
+      <<: *environment_defaults
+      DISKOVERD_WORKERNAME: ${DISKOVERD_WORKERNAME:-localworker}
+      WORKER_LOG_LEVEL: ${WORKER_LOG_LEVEL:-INFO}
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:-elasticsearch}
+      ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT:-9200}
+      ELASTICSEARCH_USER: ${ELASTICSEARCH_USER:-}
+      ELASTICSEARCH_PASS: ${ELASTICSEARCH_PASS:-}
+      ELASTICSEARCH_HTTPS: ${ELASTICSEARCH_HTTPS:-false}
+      ELASTICSEARCH_SSL_VERIFICATION: ${ELASTICSEARCH_SSL_VERIFICATION:-false}
+      DISKOVER_API_URL: ${DISKOVER_API_URL:-http://diskover-web:${DISKOVER_WEB_PORT:-80}/api.php}
+      DISKOVER_API_USER: ${DISKOVER_API_USER:-}
+      DISKOVER_API_PASS: ${DISKOVER_API_PASS:-}
     depends_on:
       - diskover-ce-web
 

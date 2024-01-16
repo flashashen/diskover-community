@@ -18,23 +18,6 @@ server {
         try_files $uri $uri/ /index.php$is_args$args;
     }
 
-    location /diskover-tools/ {
-        include proxy_params;
-        proxy_pass http://diskover-tools:8080/diskover-tools/;
-    }
-    location /rclone {
-            include proxy_params;
-            proxy_pass http://diskover-tools:8080/fileactions/rclone/rclone;
-    }
-    location /pdf {
-            include proxy_params;
-            proxy_pass http://diskover-tools:8080/fileactions/view_pdf/view_pdf;
-        }
-    location /fileactions/python {
-            include proxy_params;
-            proxy_pass http://diskover-tools:8080/fileactions/fileactions;
-    }
-
     # deny access to .htaccess/.htpasswd files
     location ~ /\.ht {
         deny all;
