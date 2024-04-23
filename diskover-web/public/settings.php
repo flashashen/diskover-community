@@ -20,6 +20,14 @@ require '../vendor/autoload.php';
 require "../src/diskover/Auth.php";
 require "../src/diskover/Diskover.php";
 
+// get ES cluster stats
+try
+{
+    $es_clusterstats = $client->cluster()->stats();
+}
+catch (Throwable $e)
+{
+}
 
 $helptext = [
     'TIMEZONE' => 'Local <a href="https://www.php.net/manual/en/timezones.php" target="_blank">Timezone</a>.',
@@ -32,7 +40,6 @@ $helptext = [
 <html lang="en">
 
 <head>
-    <?php if (isset($_COOKIE['sendanondata']) && $_COOKIE['sendanondata'] == 1) { ?>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DYSE689C04"></script>
     <script>
@@ -42,7 +49,6 @@ $helptext = [
 
     gtag('config', 'G-DYSE689C04');
     </script>
-    <?php } ?>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,6 +75,7 @@ $helptext = [
             <li class="active"><a href="#user" data-toggle="tab">User</a></li>
             <li><a href="#elasticsearch" data-toggle="tab">Elasticsearch</a></li>
             <li><a href="#other" data-toggle="tab">Other</a></li>
+            <li><a href="#version" data-toggle="tab">Version</a></li>
         </ul>
         <div id="myTabContent" class="tab-content">
             <div class="tab-pane fade active in" id="user">
@@ -193,23 +200,6 @@ $helptext = [
                             <h4>Clear diskover cookies</h4>
                             <button type="submit" class="btn btn-warning" onclick=clearCookies()>Clear</button>
                         </div>
-                        <div class="well">
-                            <h4>Version</h4>
-                            Version: <?php echo "diskover-web v" . $VERSION; ?><br>
-                            Check for <a href="https://github.com/diskoverdata/diskover-community/releases/" target="_blank">newer version</a> on GitHub <i class="fab fa-github-alt"></i>
-                        </div>
-                        <div class="well">
-                            <h4>Elasticsearch Info</h4>
-                            Connected to: <?php echo $config->ES_HOST . ":" . $config->ES_PORT ?><br />
-                            Response time: <?php echo $_SESSION['es_responsetime'] ?><br />
-                            New index check time: <?php echo $config->NEWINDEX_CHECKTIME ?> sec<br />
-                            Index info cache time: <?php echo $config->INDEXINFO_CACHETIME ?> sec<br />
-                        </div>
-                        <div class="well">
-                            <h4>Send anonymous usage data</h4>
-                            <input type="checkbox" name="sendanondata" id="sendanondata" onclick="setSendAnonData()" <?php echo (getCookie('sendanondata') == 1) ? 'checked' : ''; ?>> <label for="sendanondata" class="control-label">Send anonymous data</label>
-                            <p class="small"><i class="glyphicon glyphicon-info-sign"></i> Send anonymous usage data to Diskover Data to help improve diskover. No personal information is sent.</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -240,6 +230,27 @@ $helptext = [
                         echo "</div>";
                     }
                     ?>
+                    <div class="well">
+                        <h4>Elasticsearch Info</h4>
+                        <?php if (isset($es_clusterstats)) { ?>
+                        Nodes Total: <?php echo $es_clusterstats['_nodes']['total'] ?><br />
+                        Cluster Name: <?php echo $es_clusterstats['cluster_name'] ?><br />
+                        Cluster UUID: <?php echo $es_clusterstats['cluster_uuid'] ?><br />
+                        Status: <?php echo '<span style="color:'.$es_clusterstats['status'].'">'.$es_clusterstats['status'].'</span>' ?><br />
+                        Indices Count: <?php echo $es_clusterstats['indices']['count'] ?><br />
+                        Indices Shards Total: <?php echo $es_clusterstats['indices']['shards']['total'] ?><br />
+                        Indices Shards Primaries: <?php echo $es_clusterstats['indices']['shards']['primaries'] ?><br />
+                        Indices Shards Replication: <?php echo $es_clusterstats['indices']['shards']['replication'] ?><br />
+                        Docs Count: <?php echo $es_clusterstats['indices']['docs']['count'] ?><br />
+                        Storage Size Used: <?php echo formatBytes($es_clusterstats['indices']['store']['size_in_bytes']) ?><br />
+                        Version: <?php echo $es_clusterstats['indices']['versions'][0]['version'] ?><br />
+                        <?php } ?>
+                        <br />
+                        Connected to: <?php echo $config->ES_HOST . ":" . $config->ES_PORT ?><br />
+                        Response time: <?php echo $_SESSION['es_responsetime'] ?><br />
+                        New index check time: <?php echo $config->NEWINDEX_CHECKTIME ?> sec<br />
+                        Index info cache time: <?php echo $config->INDEXINFO_CACHETIME ?> sec<br />
+                    </div>
                     <button type="submit" class="btn btn-primary" title="Save settings">Save</button><br>
                     <br>
                     </form>
@@ -310,6 +321,17 @@ $helptext = [
                     <button type="submit" class="btn btn-primary" title="Save settings">Save</button><br>
                     <br>
                     </form>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="version">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="well">
+                            <h4>Version</h4>
+                            Version: <?php echo "diskover-web v" . $VERSION; ?><br>
+                            Check for <a href="https://github.com/diskoverdata/diskover-community/releases/" target="_blank">newer version</a> on GitHub <i class="fab fa-github-alt"></i>
+                        </div>
                     </div>
                 </div>
             </div>
