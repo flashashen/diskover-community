@@ -27,7 +27,7 @@ fi
 
 
 if [[ ! -e "/var/www/db/diskoverdb.sqlite3" ]]; then
-    echo 'Touch  /var/www/db/diskoverdb.sqlite3'
+    echo 'touch /var/www/db/diskoverdb.sqlite3'
     mkdir /var/www/db || true
     chmod 777 /var/www/db
     touch /var/www/db/diskoverdb.sqlite3 || true

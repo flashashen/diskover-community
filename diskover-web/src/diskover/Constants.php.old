@@ -1,0 +1,474 @@
+<?php
+/*
+diskover-web
+https://diskoverdata.com
+
+Copyright 2017-2023 Diskover Data, Inc.
+"Community" portion of Diskover made available under the Apache 2.0 License found here:
+https://www.diskoverdata.com/apache-license/
+
+All other content is subject to the Diskover Data, Inc. end user license agreement found at:
+https://www.diskoverdata.com/eula-subscriptions/
+
+Diskover Data products and features for all versions found here:
+https://www.diskoverdata.com/solutions/
+
+*/
+
+// diskover-web sample/default config file
+
+namespace diskover;
+
+class Constants {
+    // set to your local time zone https://www.php.net/manual/en/timezones.php
+    const TIMEZONE = "America/Chicago";
+
+    // show file/dir times in local timezone by default instead of UTC. set to TRUE or FALSE
+    // this can also be set per user on settings page
+    const LOCAL_TIMES = FALSE;
+
+    // Elasticsearch host/ip config
+    // if you are using AWS ES set host to your Elasticsearch endpoint without http:// or https://
+    // default port for Elasticsearch is 9200 and AWS ES is 80 or 443
+    // for no username and password set user and pass to ''
+    // if your Elasticsearch cluster uses HTTP TLS/SSL, set https to TRUE
+    // if you have multiple nodes in the cluster, you can add them to the hosts list
+    const ES_HOSTS = [
+        [
+            'hosts' => ["elasticsearch"],
+            'port' => 9200,
+            'user' => "",
+            'pass' => "",
+            'https' => false
+        ]
+    ];
+
+    // Default ES in the old style temporarily
+    const ES_HOST = "elasticsearch";
+    const ES_PORT = 9200;
+    const ES_USER = "";
+    const ES_PASS = "";
+
+    // Remote Clusters
+    // if you want to search across multiple ES clusters,
+    // refer to Elasticsearch cross cluster search guide to set up remote clusters.
+    // https://www.elastic.co/guide/en/elasticsearch/reference/7.x/remote-clusters.html
+    // remote_cluster_alias needs to be set to the same alias name used when setting up remote cluster in ES
+    // setting a remote cluster offline to TRUE will skip checking and using the host
+    // Diskover Enterprise license required
+    // Example multi cluster using local cluster and one remote cluster
+    // const ES_HOSTS = [
+    //    [
+    //        'hosts' => ['127.0.0.1'],
+    //       'port' => 9200,
+    //        'user' => 'elastic',
+    //        'pass' => 'changeme',
+    //        'https' => FALSE
+    //    ],
+    //    [
+    //        'hosts' => ['192.168.1.5'],
+    //        'port' => 9200,
+    //        'user' => 'elastic',
+    //        'pass' => 'changeme',
+    //        'https' => FALSE,
+    //        'remote_cluster_alias' => 'remote_cluster_1',
+    //        'offline' => FALSE
+    //    ]
+    //];
+
+    // Elasticsearch SSL Verification
+    // set to TRUE (default) to verify SSL or FALSE to not verify ssl when connecting to ES
+    const ES_SSLVERIFICATION = true;
+
+    // login auth for diskover-web
+    const LOGIN_REQUIRED = TRUE;
+
+    // default local usernames and passwords to login
+    // the passwords are no longer used after first login, a hashed password gets stored in separate db
+    const USER = 'diskover';
+    const PASS = 'darkdata';
+    // local admin user
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = 'darkdata';
+
+    // list of users who are admin users and have access to do everything
+    const ADMIN_USERS = [CONSTANTS::ADMIN_USER];
+
+    // list of users who have access to Task Panel
+    const TASK_PANEL_USERS = [CONSTANTS::ADMIN_USER];
+
+    // LDAP/AD login auth for diskover-web
+    // set LDAP_LOGINS to TRUE if you want to allow ldap/ad logins or set to FALSE to only allow local users
+    // ldap user logins require the user to be in one of the ldap groups below
+    const LDAP_LOGINS = FALSE;
+
+    // set to your Active Directory / LDAP server URI for user auth
+    // for LDAP_HOST URI use ldap://<ldaphost>:<port> or ldaps://<ldaphost>:<port> for SSL
+    const LDAP_HOST = 'ldap://ad1.mydomain.com:389';
+    // LDAP_PORT default is 389 or 636 for ldaps (SSL)
+    const LDAP_PORT = '389';
+
+    // ldap domain name
+    const LDAP_DOMAIN = 'mydomain.com';
+
+    // base dn of domain
+    const LDAP_BASEDN = 'dc=MYDOMAIN,dc=COM';
+
+    // users dn of domain, could be cn=Users or ou=People, etc
+    // set to empty quotes to search all of domain (LDAP_BASEDN), could be slower to login but may be needed if
+    // users are in different dn's and logins don't work
+    //const LDAP_USERSDN = 'cn=Users';
+    const LDAP_USERSDN = '';
+
+    // groups dn of domain, could be ou=Groups, etc
+    // set to empty quotes to search all of domain (LDAP_BASEDN), could be slower to login but may be needed if
+    // groups are in different dn's and getting groups doesn't work
+    //const LDAP_GROUPSDN = 'ou=Groups';
+    const LDAP_GROUPSDN = '';
+
+    // use alternate ldap bind method (may be needed for freeipa/red hat idm to auth)
+    const LDAP_ALT_BIND = FALSE;
+
+    // use alternate ldap bind method 2 (may be needed if LDAP_ALT_BIND does not work)
+    // when setting this to TRUE, set LDAP_ALT_BIND to FALSE
+    const LDAP_ALT_BIND2 = FALSE;
+
+    // search nested ldap groups (recursive group search)
+    const LDAP_NESTED_GROUPS = FALSE;
+
+    // list of ldap groups that contain admin users (case-sensitive)
+    const LDAP_ADMIN_GROUPS = ['diskover-admins'];
+
+    // list of ldap groups that contain normal users (case-sensitive)
+    const LDAP_USER_GROUPS = ['diskover-users', 'diskover-powerusers'];
+
+    // list of ldap groups that contain users who have access to Task Panel (case-sensitive)
+    const LDAP_TASK_PANEL_GROUPS = ['diskover-admins', 'diskover-powerusers'];
+
+    // Oauth2 login auth for diskover-web
+    // OpenID Connect (OIDC), OIDC to enable single sign-on (SSO)
+    // Diskover Pro + license required
+    // set OAUTH2_LOGINS to TRUE to use Oauth for logins or FALSE to not use Oauth
+    // when using Oauth2 OIDC SSO, local logins and ldap are not used
+    const OAUTH2_LOGINS = FALSE;
+
+    // Oauth2 application's Client ID
+    const OAUTH2_CLIENT_ID = '{yourOIDCClientId}';
+
+    // Your Oauth2 application's Client Secret
+    const OAUTH2_CLIENT_SECRET = '{yourOIDCClientSecret}';
+
+    // Oauth2 redirect URI
+    const OAUTH2_REDIRECT_URI = 'http://{diskoverWebHost}:{port}/login.php?callback';
+
+    // Oauth2 post logout redirect URI
+    const OAUTH2_LOGOUT_REDIRECT_URI = 'http://{diskoverWebHost}:{port}/';
+
+    // Oauth2 API Authorization Server Issuer URI authorization endpoint
+    const OAUTH2_AUTH_ENDPOINT = 'https://{yourOIDCDomain}/oauth2/default/v1/authorize';
+
+    // Oauth2 API Authorization Server Issuer URI token endpoint
+    const OAUTH2_TOKEN_ENDPOINT = 'https://{yourOIDCDomain}/oauth2/default/v1/token';
+
+    // Oauth2 API Authorization Server Issuer URI logout endpoint
+    const OAUTH2_LOGOUT_ENDPOINT = 'https://{yourOIDCDomain}/oauth2/default/v1/logout';
+
+    // Oauth2 API Type
+    // Types are Okta or Azure (Graph API)
+    const OAUTH2_API_TYPE = 'Okta';
+
+    // Oauth2 API URL
+    // API for getting user/group info
+    const OAUTH2_API_URL_BASE = 'https://{yourOIDCDomain}/api/v1/';
+
+    // Oauth2 API Token
+    const OAUTH2_API_TOKEN = '{yourOIDCApiToken}';
+
+    // list of Oauth2 groups that contain admin users (case-sensitive)
+    const OAUTH2_ADMIN_GROUPS = ['diskover-admins'];
+
+    // list of Oauth2 groups that contain users who have access to Task Panel (case-sensitive)
+    const OAUTH2_TASK_PANEL_GROUPS = ['diskover-admins', 'diskover-powerusers'];
+
+    // analytics filters
+    // if charts are slow to load on very large indices, try to adjust FILTER and TIME settings to filter
+    // out docs when doing ES aggregations to render charts
+
+    // default min file size (bytes) filter
+    const FILTER = 1;
+
+    // default time filter
+    // Examples: 0 or 'now' for now, 'today', 'tomorrow', 'yesterday', '1d' for 1 day, '2w' for 2 weeks, '3m' for 3 months, '5y' for 5 years
+    const TIME = 0;
+
+    // default time field (mtime, ctime, atime) to use for time filter
+    const TIME_FIELD = 'mtime';
+
+    // default maxdepth filter
+    const MAXDEPTH = 2;
+
+    // default don't use count (use size)
+    const USE_COUNT = 0;
+
+    // default don't show files on analytics pages
+    const SHOW_FILES = 0;
+
+    // default hide threshhold filter
+    const HIDE_THRESH = 0.9;
+    // end analytics filters
+
+    // default results per search page
+    const SEARCH_RESULTS = 50;
+
+    // default size field (size, size_du) to use for sizes on file tree and charts
+    // if the file systems being indexed contain hardlinks, set this to size_du to use allocated sizes
+    const SIZE_FIELD = 'size';
+
+    // default file types, used by quick search (file type) and dashboard file type usage chart
+    // additional extensions can be added/removed from each file types list
+    const FILE_TYPES = [
+        'docs' => ['doc', 'docx', 'odt', 'pdf', 'tex', 'wpd', 'wks', 'txt', 'rtf', 'key', 'odp', 'pps', 'ppt', 'pptx', 'ods', 'xls', 'xlsm', 'xlsx'],
+        'images' => ['ai', 'bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'ps', 'psd', 'psp', 'svg', 'tif', 'tiff', 'exr', 'tga'],
+        'video' => ['3g2', '3gp', 'avi', 'flv', 'h264', 'm4v', 'mkv', 'qt', 'mov', 'mp4', 'mpg', 'mpeg', 'rm', 'swf', 'vob', 'wmv', 'ogg', 'ogv', 'webm'],
+        'audio' => ['au', 'aif', 'aiff', 'cda', 'mid', 'midi', 'mp3', 'm4a', 'mpa', 'ogg', 'wav', 'wma', 'wpl'],
+        'apps' => ['apk', 'exe', 'bat', 'bin', 'cgi', 'pl', 'gadget', 'com', 'jar', 'msi', 'py', 'wsf'],
+        'programming' => ['c', 'cgi', 'pl', 'class', 'cpp', 'cs', 'h', 'java', 'php', 'py', 'sh', 'swift', 'vb'],
+        'internet' => ['asp', 'aspx', 'cer', 'cfm', 'cgi', 'pl', 'css', 'htm', 'html', 'js', 'jsp', 'part', 'php', 'py', 'rss', 'xhtml'],
+        'system' => ['bak', 'cab', 'cfg', 'cpl', 'cur', 'dll', 'dmp', 'drv', 'icns', 'ico', 'ini', 'lnk', 'msi', 'sys', 'tmp', 'vdi', 'raw'],
+        'data' => ['csv', 'dat', 'db', 'dbf', 'log', 'mdb', 'sav', 'sql', 'tar', 'xml'],
+        'disc' => ['bin', 'dmg', 'iso', 'toast', 'vcd', 'img'],
+        'compressed' => ['7z', 'arj', 'deb', 'pkg', 'rar', 'rpm', 'tar', 'gz', 'z', 'zip'],
+        'trash' => ['old', 'trash', 'tmp', 'temp', 'junk', 'recycle', 'delete', 'deleteme', 'clean', 'remove']
+    ];
+
+    // default login start page users are taken to when logging in
+    // set to dashboard or filesearch
+    const LOGINPAGE = 'filesearch';
+
+    // default hidden fields
+    // list of hidden field names to not show on search results table, user can override this on settings page
+    // below is a list of field names that can be hidden
+    // type, path, sizedu, sizep, modified, accessed, files, folders, owner, group, rating, cost
+    // Example hidden fields:
+    // const HIDE_FIELDS = ["sizep", "accessed", "rating", "group", "sizedu"];
+    const HIDE_FIELDS = [];
+
+    // extra fields for search results and view file/dir info pages
+    // key is description for field and value is ES field name
+    // Example:
+    //const EXTRA_FIELDS = [
+    //    'Unix Perms' => 'unix_perms',
+    //    'File Hash' => 'hash',
+    //    'Dupe' => 'is_dupe',
+    //    'Date Changed' => 'ctime',
+    //    'Media Info' => 'media_info',
+    //    'S3 Tier' => 's3_storageclass'
+    //];
+    const EXTRA_FIELDS = [];
+
+    // group/user index mappings
+    // controls what indices and paths groups/users are allowed to view
+    // Diskover Pro license required
+    // enable index mappings, set to TRUE or FALSE
+    const INDEX_MAPPINGS_ENABLED = FALSE;
+
+    // index_patterns key is a list of index names user/group is allowed access to view
+    // index_patterns_exclude key is a list of index names user/group is not allowed to view
+    // index pattern wildcards * and ? are allowed, example diskover-* or diskover-indexname-*
+    // to not exclude any indices/dirs, use empty list [] for index_patterns_exclude, excluded_dirs, and excluded_query
+    // excluded_dirs use absolute paths and are recursive, example /top_path/dir_name
+    // excluded_query uses ES query string including regular expression syntax
+    // group/user names, excluded_dirs, and excluded_query are case-sensitive
+    // group/user name wildcards * and ? are allowed
+    // Example:
+    //const INDEX_MAPPINGS = [
+    //    CONSTANTS::ADMIN_USER => [
+    //        [
+    //            'index_patterns' => [
+    //                'diskover-*'
+    //            ],
+    //            'index_patterns_exclude' => [],
+    //            'excluded_dirs' => [],
+    //            // allow access to projectA directory only in /mnt/stor1/projects
+    //            'excluded_query' => ['((parent_path:\/mnt\/stor1\/projects AND name:/project[^A]/) OR parent_path:/\/mnt\/stor1\/projects\/project[^A]*/)']
+    //        ]
+    //    ],
+    //    CONSTANTS::USER => [
+    //        ['index_patterns' => ['diskover-*'], 'index_patterns_exclude' => [], 'excluded_dirs' => [], 'excluded_query' => []]
+    //    ],
+    //    'diskover-admins' => [
+    //        ['index_patterns' => ['diskover-*'], 'index_patterns_exclude' => [], 'excluded_dirs' => [], 'excluded_query' => []]
+    //    ],
+    //    'diskover-users' => [
+    //        ['index_patterns' => ['diskover-*'], 'index_patterns_exclude' => [], 'excluded_dirs' => [], 'excluded_query' => []]
+    //    ],
+    //    'diskover-powerusers' => [
+    //        ['index_patterns' => ['diskover-*'], 'index_patterns_exclude' => [], 'excluded_dirs' => [], 'excluded_query' => []]
+    //    ]
+    //];
+    const INDEX_MAPPINGS = [];
+    // use json file (indexmappings.json) to control index mappings instead of INDEX_MAPPINGS
+    // set to TRUE to use index mappings file or FALSE to use INDEX_MAPPINGS
+    const INDEX_MAPPINGS_USE_FILE = FALSE;
+
+    // use latest indices
+    // enable latest indices, set to TRUE or FALSE
+    // enabling will always select and use the latest indices
+    // indices are grouped based on their top paths and the latest completed index from each group is used
+    const LATEST_INDEX_ENABLED = TRUE;
+
+    // path translations for copy to clipboard and export buttons
+    // key is path translation description and value is array which can contain single or multiple translations applied in order
+    // separate from path and to path with pipe | in each list
+    // use regular expressions for from path
+    // Example:
+    //const PATH_TRANSLATIONS = [
+    //    // change all forward slashes to back slashes
+    //    'Windows path sep' => ['\/|\\'],
+    //    // change all forward slashes to back slashes and first backlash to a drive letter
+    //    'Windows drive' => ['\/|\\', '^\\\|P:\\'],
+    //    // change all forward slashes to back slashes and first backlash to a unc path
+    //    'Windows unc' => ['\/|\\', '^\\\|\\\\stor1\\']
+    //];
+    const PATH_TRANSLATIONS = [];
+
+    // AD/ldap group permission filtering
+    // controls if files/directories get fitered based on AD/ldap groups membership of the user logged in
+    // local users admin and diskover always see all directories in the index
+    // aws s3 indices are not filtered
+    // Diskover Pro license required
+    // enable ldap filtering, set to TRUE or FALSE
+    const LDAP_FILTERING_ENABLED = FALSE;
+
+    // AD/ldap groups that are excluded from filtering
+    // if a user is a member of one of these groups, they will see all files/directories
+    // group names are case-sensitive
+    const LDAP_GROUPS_EXCLUDED = ['diskover-admins', 'diskover-powerusers'];
+
+    // Oauth2 SSO group permission filtering
+    // controls if files/directories get fitered based on Oauth2 SSO groups membership of the user logged in
+    // local users admin and diskover always see all directories in the index
+    // aws s3 indices are not filtered
+    // Diskover Pro license required
+    // enable Oauth2 filtering, set to TRUE or FALSE
+    const OAUTH2_FILTERING_ENABLED = FALSE;
+
+    // Oauth2 SSO groups that are excluded from filtering
+    // if a user is a member of one of these groups, they will see all files/directories
+    // group names are case-sensitive
+    const OAUTH2_GROUPS_EXCLUDED = ['diskover-admins', 'diskover-powerusers'];
+
+    // lower case group names when filtering
+    const GROUPNAME_FILTERING_LOWERCASE = FALSE;
+
+    // use UNIXPERMS_FILTERING_STRING as well as group membership to determine filtering
+    const UNIXPERMS_FILTERING_ENABLED = FALSE;
+
+    // unix perms filtering ES search string
+    // could also use other fields besides unix_perms such as owner, group, etc
+    //const UNIXPERMS_FILTERING_STRING = 'owner:root AND group:root AND unix_perms:755'
+    const UNIXPERMS_FILTERING_STRING = 'unix_perms:/..[57]/';
+
+
+    // HTTP Basic Auth for REST API
+    // api authentication, set to TRUE to enable or FALSE to disable
+    const API_AUTH_ENABLED = FALSE;
+
+    // api username and password
+    // this is the default api password, it needs to be changed on settings page of admin user
+    // a hashed password gets stored in separate db
+    const API_USER = 'diskoverapi';
+    const API_PASS = 'apisecret';
+
+    // LDAP/AD Auth for REST API
+    // api ldap/ad authentication, set to TRUE to enable or FALSE to disable
+    const API_AUTH_LDAP_ENABLED = FALSE;
+
+    /*
+    File Actions
+    User defined file actions (plugins) to act on selected files and directories on search results and view info pages.
+    Diskover Pro license required
+
+    - fileactions array below contains key value pairs
+    - to disable all file actions, set fileactions list to empty list []
+    - key is action name to display in file action dropdown menu
+    - value contains a list containing keys
+        - webpage is the web page file to open in new window to do file action
+            - file action web pages are in in public/fileactions/
+        - allowed_users is a list of local users allowed to run the file action
+        - allowed_groups is a list of ldap/ad or Okta groups allowed to run the file action
+        - menu_icon_class is the font awesome class to use for the file action menu item or use '' for default icon
+    */
+
+    /*
+    const FILE_ACTIONS = [
+        'live view' => [
+            'webpage' => 'liveview.php',
+            'allowed_users' => [Constants::ADMIN_USER, Constants::USER],
+            'allowed_groups' => ['diskover-admins', 'diskover-powerusers', 'diskover-users'],
+            'menu_icon_class' => 'far fa-folder-open'
+        ],
+        'rclone sync local' => [
+            'webpage' => 'rclone.php?flags=sync -v -P -n&dest=/tmp/',
+            'allowed_users' => [Constants::ADMIN_USER, Constants::USER],
+            'allowed_groups' => ['diskover-admins', 'diskover-powerusers', 'diskover-users'],
+            'menu_icon_class' => 'far fa-copy'
+        ],
+        'python print path' => [
+            'webpage' => 'pythonprintpath.php',
+            'allowed_users' => [Constants::ADMIN_USER, Constants::USER],
+            'allowed_groups' => ['diskover-admins', 'diskover-powerusers', 'diskover-users'],
+            'menu_icon_class' => 'fab fa-python'
+        ]
+    ];
+    */
+    const FILE_ACTIONS = [];
+
+
+
+    // Maximum number of indices to load by default, indices are loaded in order by creation date
+    // setting this too high can cause slow logins and other timeout issues
+    // This setting can bo overridden on indices page per user and stored in maxindex cookie
+    // If MAX_INDEX is set higher than maxindex browser cookie, the cookie will be set to this value
+    const MAX_INDEX = 250;
+
+    // time in seconds for index info to be cached, clicking reload indices forces update
+    const INDEXINFO_CACHETIME = 1200;
+
+    // time in seconds to check Elasticsearch for new index info
+    const NEWINDEX_CHECKTIME = 30;
+
+    // sqlite database file path
+    const DATABASE = '/var/www/db/diskoverdb.sqlite3';
+
+    // hide search charts by default
+    const HIDE_SEARCH_CHARTS = FALSE;
+
+    // hide search charts by default when changing directories
+    const HIDE_SEARCH_CHARTS_DIRCHANGE = FALSE;
+
+    // alternate top path labels to display in search file tree and top path drop down menu in nav bar
+    // default is to display the basename of top path directory
+    // set to [] to use defaults
+    // Example to set /mnt/stor1 to vol1 label and /mnt/stor2 to vol2 label:
+    // const TOPPATH_LABELS = ['/mnt/stor1' => 'vol1', '/mnt/stor2' => 'vol2'];
+    const TOPPATH_LABELS = [];
+
+    // top path collapsible tree/menu
+    // top path tree displayed in search file tree and top path drop down menu in nav bar
+    // default is have all top paths under All tree
+    // set to [] to use defaults
+    // uses php's preg_match for reg exp of top paths
+    // Example to set /mnt/tokyo_stor* to be nested under Tokyo and /mnt/van_stor* to be nested under Vancouver:
+    // const TOPPATH_TREE = [ 'Tokyo' => ['/\/mnt\/tokyo_stor*/'], 'Vancouver' => ['/\/mnt\/van_stor*/'] ];
+    const TOPPATH_TREE = [];
+
+    // Hide share anonymous data popup for all new user logins, set to TRUE to hide or FALSE to not hide
+    const HIDE_SHAREDATA = FALSE;
+
+    // Max number of search result items when exporting
+    const MAX_EXPORT = 100000;
+
+    // Try to use chart data (if exists) in directory docs
+    const DIRDOC_CHARTDATA = FALSE;
+}
