@@ -1,6 +1,7 @@
 
 version: '3'
 
+name: diskover   # leaving out reference to CE may make docker upgrade path easier
 
 x-defaults: &service_defaults
   restart: unless-stopped
@@ -55,7 +56,7 @@ services:
 
   diskover-ce-web:
     <<: *service_defaults
-    image: diskoverdata/diskover-ce-web${DISKOVER_WEB_IMAGE_SUFFIX:-}:${DISKOVER_IMAGE_VERSION}
+    image: diskoverdata/diskover-ce-web${DISKOVER_WEB_IMAGE_SUFFIX:-}:${DISKOVER_IMAGE_VERSION:-2.3.0_build_20240424}
     volumes:
       - ${HOST_MOUNT_DISKOVER_WEB:-./resources}:/var/www
       # - ${HOST_MOUNT_DISKOVER_WEB_DB:-./mount/web/db}:/var/www/db
@@ -66,7 +67,7 @@ services:
       <<: *environment_defaults
       DISKOVER_WEB_PORT: ${DISKOVER_WEB_PORT:-80}
       DISKOVER_WEB_HTTPS_PORT: ${DISKOVER_WEB_HTTPS_PORT:-443}
-      DISKOVER_ADMIN_PORT: ${DISKOVER_ADMIN_PORT:-8080}
+      DISKOVER_ADMIN_PORT: ${DISKOVER_ADMIN_PORT:-}
       ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:-elasticsearch}
       ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT:-9200}
       ELASTICSEARCH_USER: ${ELASTICSEARCH_USER:-}
@@ -86,7 +87,7 @@ services:
 
   diskover-ce:
     <<: *service_defaults
-    image: diskoverdata/diskover-ce:${DISKOVER_IMAGE_VERSION}
+    image: diskoverdata/diskover-ce:${DISKOVER_IMAGE_VERSION:-2.3.0_build_20240424}
     volumes:
       - ${DISKOVER_SCAN_DIR:-/bin}:/data
       # - ${HOST_MOUNT_DISKOVER_APP:-./mount/worker/app}:/opt/diskover
