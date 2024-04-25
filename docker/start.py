@@ -44,10 +44,12 @@ def prompt_scan_dir():
 
 
 def get_compose_env(host_scan_dir):
-     return {
+    env = {
         'DISKOVER_SCAN_DIR': host_scan_dir if host_scan_dir else '.',
         'DISKOVER_IMAGE_VERSION': '2.3.0_build_20240424'
-    } | os.environ.copy()   # give precedence to system env
+    }
+    env.update(os.environ.copy())   # give precedence to system env
+    return env
 
 
 def write_compose_env(host_scan_dir):
