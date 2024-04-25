@@ -57,8 +57,8 @@ services:
   diskover-ce-web:
     <<: *service_defaults
     image: diskoverdata/diskover-ce-web${DISKOVER_WEB_IMAGE_SUFFIX:-}:${DISKOVER_IMAGE_VERSION:-2.3.0_build_20240424}
-    volumes:
-      - ${HOST_MOUNT_DISKOVER_WEB:-./resources}:/var/www
+    # volumes:  no volumes for now. next move might be to use the install from /dist like generic/essential does it. then vols can be mapped right on top of src folders
+      # - ${HOST_MOUNT_DISKOVER_WEB:-./resources}:/var/www
       # - ${HOST_MOUNT_DISKOVER_WEB_DB:-./mount/web/db}:/var/www/db
     ports:
       - ${DISKOVER_WEB_PORT:-80}:${DISKOVER_WEB_PORT:-80}
