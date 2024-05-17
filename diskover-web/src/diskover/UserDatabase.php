@@ -28,9 +28,11 @@ class UserDatabase
 
     public function connect()
     {
-        require 'config_inc.php';
-        // Get datbase file path from config
-        $this->databaseFilename = $config->DATABASE;
+        require 'config_defaults_web.php';
+        
+        // Get database file path from config defaults
+        // Check for env var
+        $this->databaseFilename = getenv('DATABASE') ?: $config_defaults_web['DATABASE'];
 
         try {
             // Open sqlite database
@@ -51,7 +53,7 @@ class UserDatabase
 
     protected function setupDatabase()
     {
-        require 'config_inc.php';
+        require 'config_defaults_web.php';
         // If the database users table is not empty, we have nothing to do here.
         $res = $this->db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
         if ($row = $res->fetchArray()) {
@@ -71,8 +73,8 @@ class UserDatabase
 
         // Grab config data and create initial user.
         $user = new User();
-        $user->username = $config->USER;
-        $user->setPassword($config->PASS);
+        $user->username = $config_defaults_web['USER'];
+        $user->setPassword($config_defaults_web['PASS']);
 
         // Add the user, and save the newly created entry.
         $this->addUser($user);
@@ -111,7 +113,7 @@ class UserDatabase
 
     public function changePassword(bool $initialChange): string
     {
-        require 'config_inc.php';
+        require 'config_defaults_web.php';
         $username = $_SESSION['username'];
         $password1 = $_POST['password'];
         $password2 = $_POST['password2'];
@@ -129,7 +131,7 @@ class UserDatabase
         // for a password, but for sanity, make sure the current
         // password matches the expected default password.
         if ($initialChange) {
-            if (!$user->validatePassword($config->PASS)) {
+            if (!$user->validatePassword($config_defaults_web['PASS'])) {
                 // They were attempting to change their password from the
                 // initial password change page, but the database password
                 // does not match the expected default password.
@@ -149,7 +151,7 @@ class UserDatabase
         }
 
         // Ensure password not same as default.
-        if ($password1 === $config->PASS) {
+        if ($password1 === $config_defaults_web['PASS']) {
             return 'Password same as default, use a different password.';
         }
 
